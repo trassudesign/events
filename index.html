@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="pt">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Trassu Quiz + Stock</title>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="manifest" href="manifest.json" />
+  </head>
+  <body>
+    <!-- Home Screen -->
+    <div id="home-screen" class="screen active">
+      
+      <div class="language-toggle">
+        <img
+          id="lang-pt"
+          src="images/pt-flag.png"
+          alt="Português"
+          class="active"
+        />
+        <img id="lang-en" src="images/en-flag.png" alt="English" />
+      </div>
+
+      <button id="admin-btn" class="admin-toggle">⚙ Admin</button>
+
+      <div class="half top">
+        <img id="main-event-logo" src="images/acf-logo.png" alt="ACF Logo" class="acf-logo" />
+        <button id="stock-btn">Ver Stock Algarve Classic Festival</button>
+      </div>
+      <div class="half bottom">
+        <img
+          src="images/logo-trassu-branco.png"
+          alt="TRASSU Logo"
+          class="trassu-logo"
+        />
+        <button id="start-btn">Começar Quiz</button>
+      </div>
+    </div>
+
+    <!-- Quiz Screen -->
+    <div id="quiz-screen" class="screen">
+      <div id="question-container">
+        <img id="question-img" src="" alt="Pergunta" />
+        <p id="question-text"></p>
+        <div id="options-grid"></div>
+
+        <div id="timer-wrapper">
+          <div id="timer-bar"><div id="timer-fill"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Email Popup -->
+    <div id="email-popup" class="screen">
+      <h2>Parabéns!</h2>
+      <p id="result-message"></p>
+      <p>Insira seu nome e email para veres a tua posição geral:</p>
+      <input type="text" id="player-name" placeholder="Nome" />
+      <input type="email" id="player-email" placeholder="Email" />
+      <button id="submit-email">Enviar</button>
+    </div>
+
+    <!-- Leaderboard -->
+    <div id="leaderboard-screen" class="screen">
+      <h2>Leaderboard Top 20</h2>
+      <ul id="leaderboard-list"></ul>
+      <button id="export-btn">Exportar CSV</button>
+      <button id="restart-btn">Voltar ao início</button>
+    </div>
+
+    <!-- Stock Screen -->
+    <div id="stock-screen" class="screen">
+      <div id="stock-container">
+        <div id="stock-header">
+           <img id="stock-event-logo" src="images/acf-logo.png" alt="Logo" class="acf-logo-small" />
+        </div>
+        <div id="search-container">
+          <input
+            type="text"
+            id="search-input"
+            placeholder="Pesquisar produto..."
+          />
+        </div>
+        <div id="stock-grid"></div>
+      </div>
+      <button id="back-home">Voltar ao início</button>
+    </div>
+
+    <!-- Admin Login Modal -->
+    <div id="admin-login-modal" class="screen">
+      <div class="admin-login-box">
+        <h2>Admin Login</h2>
+        <input type="password" id="admin-pin-input" placeholder="Enter PIN" maxlength="10" />
+        <div class="admin-login-actions">
+          <button id="admin-pin-submit">Enter</button>
+          <button id="admin-pin-cancel" class="btn-cancel">Cancel</button>
+        </div>
+        <p id="admin-pin-error" class="pin-error"></p>
+      </div>
+    </div>
+
+    <!-- Admin Confirmation Modal -->
+    <div id="admin-confirm-modal" class="screen">
+      <div class="admin-login-box">
+        <h2 id="confirm-title">Confirm Action</h2>
+        <p id="confirm-message" style="margin-bottom: 24px; color: #666;"></p>
+        <div class="admin-login-actions">
+          <button id="confirm-yes" class="btn-danger">Yes, Delete</button>
+          <button id="confirm-no" class="btn-cancel">Cancel</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Admin Screen -->
+    <div id="admin-screen" class="screen">
+      <div id="admin-notification" class="admin-notification"></div>
+      <div id="admin-content">
+        <div class="admin-top-actions">
+          <h2>Admin Panel</h2>
+          <button class="btn-small" data-action="go-home">Return to Home</button>
+        </div>
+        <button data-action="create-event">+ Create Event</button>
+        <div id="events-list"></div>
+        <button data-action="admin-logout">Logout</button>
+      </div>
+    </div>
+
+    <!-- Admin Edit Screen -->
+    <div id="admin-edit-screen" class="screen">
+      <div id="admin-edit-notification" class="admin-notification"></div>
+      <div id="admin-edit-content"></div>
+    </div>
+
+    <!-- Admin Stats Screen -->
+    <div id="admin-stats-screen" class="screen">
+      <div id="admin-stats-notification" class="admin-notification"></div>
+      <div id="admin-stats-content"></div>
+    </div>
+
+    <!-- Modal Zoom -->
+    <div id="modal" class="modal">
+      <span id="close-modal" class="close">&times;</span>
+      <img class="modal-content" id="modal-img" />
+      <div id="modal-caption"></div>
+    </div>
+
+    <!-- Feedback (dinâmico) container -->
+    <div id="feedback-layer" aria-hidden="true"></div>
+
+    <script type="module" src="main.js"></script>
+  </body>
+</html>

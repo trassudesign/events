@@ -1,0 +1,93 @@
+{
+  "pt": [
+    {
+      "img": "images/GT40.png",
+      "question": "O Ford GT40 foi criado com o objetivo de derrotar que marca nas 24h de Le Mans?",
+      "options": ["Ferrari", "Porsche", "McLaren", "Jaguar"],
+      "answer": 0
+    },
+    {
+      "img": "images/R34.png",
+      "question": "O Nissan R34 GT-R ficou muito famoso em que coleção de filmes?",
+      "options": [
+        "Transformers",
+        "Need for Speed",
+        "Velocidade Furiosa (Fast & Furious)",
+        "James Bond"
+      ],
+      "answer": 2
+    },
+    {
+      "img": "images/300SL.png",
+      "question": "Qual a *feature* de design mais reconhecível no Mercedes-Benz 300 SL de 1954?",
+      "options": [
+        "Motor central V12",
+        "Pneus de faixa branca",
+        "Teto rígido amovível",
+        "Portas asa de gaivota"
+      ],
+      "answer": 3
+    },
+    {
+      "img": "images/F1.png",
+      "question": "Quantas vezes veio a Fórmula 1 a Portimão?",
+      "options": ["1", "2", "3", "4"],
+      "answer": 1
+    },
+    {
+      "img": "images/F40.png",
+      "question": "Em que década foi lançado o Ferrari F40?",
+      "options": ["70's", "80's", "90's", "00's"],
+      "answer": 1
+    },
+    {
+      "img": "images/Supra.png",
+      "question": "Em que país foi fabricado o Toyota Supra original?",
+      "options": ["EUA", "Alemanha", "Japão", "Coreia do Sul"],
+      "answer": 2
+    }
+  ],
+  "en": [
+    {
+      "img": "images/GT40.png",
+      "question": "The Ford GT40 was created to beat which brand in the 24 Hours of Le Mans?",
+      "options": ["Ferrari", "Porsche", "McLaren", "Jaguar"],
+      "answer": 0
+    },
+    {
+      "img": "images/R34.png",
+      "question": "The Nissan R34 GT-R became famous in which movie series?",
+      "options": ["Transformers", "Need for Speed", "Fast & Furious", "James Bond"],
+      "answer": 2
+    },
+    {
+      "img": "images/300SL.png",
+      "question": "What's the most recognizable design feature of the 1954 Mercedes-Benz 300 SL?",
+      "options": [
+        "V12 mid-engine",
+        "Whitewall tires",
+        "Removable hardtop",
+        "Gullwing doors"
+      ],
+      "answer": 3
+    },
+    {
+      "img": "images/F1.png",
+      "question": "How many times has Formula 1 visited Portimão?",
+      "options": ["1", "2", "3", "4"],
+      "answer": 1
+    },
+    {
+      "img": "images/F40.png",
+      "question": "In which decade was the Ferrari F40 launched?",
+      "options": ["70's", "80's", "90's", "00's"],
+      "answer": 1
+    },
+    {
+      "img": "images/Supra.png",
+      "question": "Which country originally manufactured the Toyota Supra?",
+      "options": ["USA", "Germany", "Japan", "South Korea"],
+      "answer": 2
+    }
+  ]
+}
