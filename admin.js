@@ -16,11 +16,10 @@ import {
   exportEventToCSV,
   recordTransaction,
 } from "./events.js";
-import { uploadImage, supabaseFetch } from "./config.js";
+import { uploadImage, supabaseFetch, supabaseSignIn, supabaseSignOut, getSupabaseSession } from "./config.js";
 import { showScreen } from "./utils.js";
 
 /* ========= ADMIN AUTH ========= */
-const ADMIN_PIN = "1234"; // Change this to your desired PIN
 let isAdminAuthenticated = false;
 let currentEditEventId = null;
 
@@ -28,23 +27,29 @@ export function isAdmin() {
   return isAdminAuthenticated;
 }
 
-export function authenticateAdmin(pin) {
-  if (pin === ADMIN_PIN) {
-    isAdminAuthenticated = true;
-    localStorage.setItem("adminAuth", "true");
-    return true;
+export async function authenticateAdmin(email, password) {
+  try {
+    const session = await supabaseSignIn(email, password);
+    if (session) {
+      isAdminAuthenticated = true;
+      return true;
+    }
+  } catch (err) {
+    console.error("Auth failed:", err.message);
+    throw err;
   }
   return false;
 }
 
 export function logoutAdmin() {
   isAdminAuthenticated = false;
-  localStorage.removeItem("adminAuth");
+  supabaseSignOut();
 }
 
 // Check if already authenticated from previous session
 export function checkAdminAuth() {
-  if (localStorage.getItem("adminAuth") === "true") {
+  const session = getSupabaseSession();
+  if (session) {
     isAdminAuthenticated = true;
   }
 }
@@ -65,11 +70,11 @@ export function setupAdminDelegation() {
         showCreateEventForm();
         break;
       case "go-home":
-        location.reload();
+        location.hash = "";
         break;
       case "admin-logout":
         logoutAdmin();
-        location.reload();
+        location.hash = "";
         break;
       case "edit":
         await editEvent(id);
@@ -85,6 +90,26 @@ export function setupAdminDelegation() {
         break;
       case "view-stats":
         await viewStats(id);
+        break;
+      case "toggle-quiz":
+        const showQuiz = btn.checked;
+        try {
+          await updateEvent(id, { show_quiz: showQuiz });
+          notifyAdmin(`Quiz ${showQuiz ? "ativado" : "desativado"} para este evento`, "success");
+        } catch (err) {
+          notifyAdmin("Erro ao atualizar quiz: " + err.message);
+          btn.checked = !showQuiz; // Revert
+        }
+        break;
+      case "toggle-online-store":
+        const showStore = btn.checked;
+        try {
+          await updateEvent(id, { show_online_store: showStore });
+          notifyAdmin(`Loja Online ${showStore ? "ativada" : "desativada"} para este evento`, "success");
+        } catch (err) {
+          notifyAdmin("Erro ao atualizar loja: " + err.message);
+          btn.checked = !showStore; // Revert
+        }
         break;
     }
   });
@@ -278,33 +303,49 @@ export async function showAdminPanel() {
  */
 function showAdminLogin() {
   const loginModal = document.getElementById("admin-login-modal");
-  const pinInput = document.getElementById("admin-pin-input");
-  const pinError = document.getElementById("admin-pin-error");
-  const submitBtn = document.getElementById("admin-pin-submit");
-  const cancelBtn = document.getElementById("admin-pin-cancel");
+  const emailInput = document.getElementById("admin-email");
+  const passInput = document.getElementById("admin-password");
+  const loginError = document.getElementById("admin-login-error");
+  const submitBtn = document.getElementById("admin-login-submit");
+  const cancelBtn = document.getElementById("admin-login-cancel");
 
   // Reset state
-  pinInput.value = "";
-  pinError.textContent = "";
+  if (emailInput) emailInput.value = "";
+  if (passInput) passInput.value = "";
+  if (loginError) loginError.textContent = "";
 
   showScreen(loginModal);
-  pinInput.focus();
+  if (emailInput) emailInput.focus();
 
-  function handleSubmit() {
-    const pin = pinInput.value.trim();
-    if (authenticateAdmin(pin)) {
-      cleanup();
-      showAdminPanel();
-    } else {
-      pinError.textContent = "Incorrect PIN";
-      pinInput.value = "";
-      pinInput.focus();
+  async function handleSubmit() {
+    const email = emailInput.value.trim();
+    const pass = passInput.value.trim();
+
+    if (!email || !pass) {
+      loginError.textContent = "Preencha todos os campos";
+      return;
+    }
+
+    submitBtn.innerText = "A entrar...";
+    submitBtn.disabled = true;
+
+    try {
+      if (await authenticateAdmin(email, pass)) {
+        cleanup();
+        showAdminPanel();
+      }
+    } catch (err) {
+      loginError.textContent = "Login falhou: verifique email/senha";
+      console.error(err);
+    } finally {
+      submitBtn.innerText = "Entrar";
+      submitBtn.disabled = false;
     }
   }
 
   function handleCancel() {
     cleanup();
-    showScreen(document.getElementById("home-screen"));
+    location.href = "/";
   }
 
   function handleKeydown(e) {
@@ -315,12 +356,12 @@ function showAdminLogin() {
   function cleanup() {
     submitBtn.removeEventListener("click", handleSubmit);
     cancelBtn.removeEventListener("click", handleCancel);
-    pinInput.removeEventListener("keydown", handleKeydown);
+    passInput.removeEventListener("keydown", handleKeydown);
   }
 
   submitBtn.addEventListener("click", handleSubmit);
   cancelBtn.addEventListener("click", handleCancel);
-  pinInput.addEventListener("keydown", handleKeydown);
+  passInput.addEventListener("keydown", handleKeydown);
 }
 
 /**
@@ -353,11 +394,29 @@ export async function loadAdminEvents() {
         ${event.is_active ? '<span class="badge active-badge">ACTIVE</span>' : ""}
       </div>
       <div class="event-actions">
-        <button class="btn-small" data-action="edit" data-id="${event.id}">Edit</button>
-        <button class="btn-small" data-action="set-active" data-id="${event.id}">Set Active</button>
-        <button class="btn-small" data-action="duplicate" data-id="${event.id}">Duplicate</button>
-        <button class="btn-small btn-danger" data-action="delete" data-id="${event.id}">Delete</button>
-        <button class="btn-small btn-stats" data-action="view-stats" data-id="${event.id}">Stats</button>
+        <div class="toggles-wrapper">
+          <div class="quiz-toggle-inline">
+            <label class="switch small-switch">
+              <input type="checkbox" data-action="toggle-quiz" data-id="${event.id}" ${event.show_quiz !== false ? "checked" : ""}>
+              <span class="slider round"></span>
+            </label>
+            <span class="toggle-label">Quiz</span>
+          </div>
+          <div class="quiz-toggle-inline">
+            <label class="switch small-switch">
+              <input type="checkbox" data-action="toggle-online-store" data-id="${event.id}" ${event.show_online_store !== false ? "checked" : ""}>
+              <span class="slider round"></span>
+            </label>
+            <span class="toggle-label">Full Store Stock button</span>
+          </div>
+        </div>
+        <div class="action-buttons">
+          <button class="btn-small" data-action="edit" data-id="${event.id}">Edit</button>
+          <button class="btn-small" data-action="set-active" data-id="${event.id}">Set Active</button>
+          <button class="btn-small" data-action="duplicate" data-id="${event.id}">Duplicate</button>
+          <button class="btn-small btn-danger" data-action="delete" data-id="${event.id}">Delete</button>
+          <button class="btn-small btn-stats" data-action="view-stats" data-id="${event.id}">Stats</button>
+        </div>
       </div>
     `;
 
@@ -599,7 +658,7 @@ function renderEventCars(cars, container, query = "") {
     const isOutOfStock = car.is_sold || qty <= 0;
 
     carCard.innerHTML = `
-      <img src="${car.image_url}" alt="${car.name}" style="max-width: 80px; height: auto; border-radius: 4px;">
+      <img src="${car.image_url}" alt="${car.name}" class="car-card-img">
       <div style="flex: 1;">
         <strong>${car.name}</strong><br>
         <div class="car-variant-info">

@@ -9,7 +9,7 @@ import { supabaseFetch } from "./config.js";
  */
 export async function getAllEvents() {
   try {
-    const events = await supabaseFetch("/events?order=date.desc");
+    const events = await supabaseFetch("/events?order=is_active.desc,date.desc");
     return events;
   } catch (err) {
     console.error("Error fetching events:", err);
@@ -39,9 +39,11 @@ export async function createEvent(name, date, logoUrl = null) {
       method: "POST",
       body: JSON.stringify({
         name,
-        date: date || null,
+        date: date || new Date().toISOString(),
         is_active: false,
         logo_url: logoUrl,
+        show_quiz: true,
+        show_online_store: true,
       }),
     });
     return result[0];
@@ -102,7 +104,13 @@ export async function duplicateEvent(eventId, newName) {
     const source = sourceEvent[0];
 
     // Create new event
-    const newEvent = await createEvent(newName, source.date, source.logo_url);
+    const newEvent = await createEvent(newName, source.date);
+    
+    // Copy show_quiz and show_online_store settings
+    await updateEvent(newEvent.id, {
+      show_quiz: source.show_quiz,
+      show_online_store: source.show_online_store !== false,
+    });
 
     // Get source event's cars
     const cars = await supabaseFetch(`/cars?event_id=eq.${eventId}`);

@@ -6,6 +6,7 @@
     <title>Trassu Quiz + Stock</title>
     <link rel="stylesheet" href="style.css" />
     <link rel="manifest" href="manifest.json" />
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   </head>
   <body>
     <!-- Home Screen -->
@@ -21,11 +22,14 @@
         <img id="lang-en" src="images/en-flag.png" alt="English" />
       </div>
 
-      <button id="admin-btn" class="admin-toggle">⚙ Admin</button>
 
       <div class="half top">
         <img id="main-event-logo" src="images/acf-logo.png" alt="ACF Logo" class="acf-logo" />
         <button id="stock-btn">Ver Stock Algarve Classic Festival</button>
+      </div>
+      <div class="half middle" id="store-section">
+        <p id="store-text">"We have even more models in our online store! Check every model"</p>
+        <button id="store-btn">Visitar Loja Online</button>
       </div>
       <div class="half bottom">
         <img
@@ -71,31 +75,65 @@
     <!-- Stock Screen -->
     <div id="stock-screen" class="screen">
       <div id="stock-container">
-        <div id="stock-header">
-           <img id="stock-event-logo" src="images/acf-logo.png" alt="Logo" class="acf-logo-small" />
-        </div>
         <div id="search-container">
           <input
             type="text"
             id="search-input"
             placeholder="Pesquisar produto..."
           />
+          <button id="back-home">Voltar ao início</button>
         </div>
+        <div id="stock-category-filters" class="category-filters"></div>
         <div id="stock-grid"></div>
       </div>
-      <button id="back-home">Voltar ao início</button>
     </div>
 
-    <!-- Admin Login Modal -->
+    <!-- Full Store Screen -->
+    <div id="full-store-screen" class="screen">
+      <div id="full-store-container">
+        <div id="full-store-search-container">
+          <input
+            type="text"
+            id="full-store-search"
+            placeholder="Pesquisar produto na loja..."
+          />
+          <button id="back-home-store">Voltar ao início</button>
+        </div>
+        <div id="category-filters" class="category-filters"></div>
+        <div id="full-store-info" class="full-store-info">
+          <p>Clica em qualquer modelo para veres os detalhes na nossa loja</p>
+        </div>
+        <div id="full-store-grid"></div>
+      </div>
+    </div>
+
+    <!-- QR Modal -->
+    <div id="qr-modal" class="modal">
+      <div class="qr-container">
+        <span id="close-qr" class="close">&times;</span>
+        <h3 id="qr-product-name">Product Name</h3>
+        <div id="qrcode"></div>
+        <p id="qr-instruction">Digitalize para ver na loja online</p>
+      </div>
+    </div>
+
+    <!-- Admin Login Screen -->
     <div id="admin-login-modal" class="screen">
       <div class="admin-login-box">
         <h2>Admin Login</h2>
-        <input type="password" id="admin-pin-input" placeholder="Enter PIN" maxlength="10" />
-        <div class="admin-login-actions">
-          <button id="admin-pin-submit">Enter</button>
-          <button id="admin-pin-cancel" class="btn-cancel">Cancel</button>
+        <div class="login-input-group">
+          <label for="admin-email">Email</label>
+          <input type="email" id="admin-email" placeholder="admin@example.com" />
         </div>
-        <p id="admin-pin-error" class="pin-error"></p>
+        <div class="login-input-group">
+          <label for="admin-password">Senha</label>
+          <input type="password" id="admin-password" placeholder="••••••••" />
+        </div>
+        <div class="admin-login-actions">
+          <button id="admin-login-submit">Entrar</button>
+          <button id="admin-login-cancel" class="btn-cancel">Cancelar</button>
+        </div>
+        <p id="admin-login-error" class="pin-error"></p>
       </div>
     </div>
 
