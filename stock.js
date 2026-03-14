@@ -289,7 +289,14 @@ export async function showFullStore() {
     try {
     const res = await fetch(endpoint);
     const data = await res.json();
-    shopifyProducts = (data.products || []).sort((a, b) => a.title.localeCompare(b.title));
+    shopifyProducts = (data.products || []).sort((a, b) => {
+      const aIsRequest = a.title.toLowerCase().startsWith("request a");
+      const bIsRequest = b.title.toLowerCase().startsWith("request a");
+      
+      if (aIsRequest && !bIsRequest) return -1;
+      if (!aIsRequest && bIsRequest) return 1;
+      return a.title.localeCompare(b.title);
+    });
 
     renderFullStoreCategoryPills();
     renderFullStoreGrid(shopifyProducts);
