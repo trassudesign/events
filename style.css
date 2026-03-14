@@ -174,13 +174,16 @@ li {
   padding: 1rem 1.5rem;
   background: var(--bg);
   display: flex;
-  gap: 1rem;
   align-items: center;
-  justify-content: space-between; /* Push back button left and search right */
+  justify-content: center; /* Center children (the search wrapper) */
+  position: relative;
+  min-height: 60px;
 }
 
 /* Back Button styling */
 .btn-back {
+  position: absolute;
+  left: 1.5rem;
   background: #eee;
   color: #555;
   border: none;
@@ -190,6 +193,7 @@ li {
   font-size: 0.9rem;
   white-space: nowrap;
   transition: background 0.2s;
+  z-index: 5;
 }
 
 .btn-back:hover {
@@ -199,9 +203,9 @@ li {
 /* Search Wrapper & Button */
 .search-wrapper {
   display: flex;
-  flex: 1;
-  max-width: 600px;
-  position: relative;
+  width: 100%;
+  max-width: 500px;
+  flex-wrap: nowrap; /* Prevent button from going to next line */
 }
 
 .btn-search {
@@ -215,15 +219,17 @@ li {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-left: -2px; /* Slight overlap to merge with border */
+  height: 44px; /* Explicit height to match input */
+  margin-left: -2px;
 }
 
 #search-input, #full-store-search {
-  width: 100%;
+  flex: 1;
   padding: 10px 14px;
   font-size: 1rem;
   border: 2px solid #ddd;
-  border-radius: 8px 0 0 8px; /* Rounded only on left */
+  border-radius: 8px 0 0 8px;
+  height: 44px; /* Explicit height */
   transition: border-color 0.2s;
   background: white;
 }

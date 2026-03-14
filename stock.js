@@ -68,6 +68,9 @@ export async function showStock() {
   // Update static texts
   if (searchInput) searchInput.placeholder = texts.searchPlaceholder;
   if (backHome) backHome.textContent = texts.backHome;
+  
+  const searchBtnStock = document.getElementById("search-btn-stock");
+  if (searchBtnStock) searchBtnStock.textContent = `🔍 ${texts.searchText}`;
 
   // Display loading message
   stockGrid.innerHTML = `<div class="loading">${texts.loadingStock}</div>`;
@@ -271,6 +274,9 @@ export async function showFullStore() {
   const bhs = document.getElementById("back-home-store");
   if (bhs) bhs.textContent = texts.backHome;
 
+  const searchBtnStore = document.getElementById("search-btn-store");
+  if (searchBtnStore) searchBtnStore.textContent = `🔍 ${texts.searchText}`;
+
   const info = document.getElementById("full-store-info");
   if (info) info.querySelector("p").textContent = texts.fullStoreInfo;
   
@@ -309,6 +315,10 @@ export async function showFullStore() {
 fullStoreSearchInput.addEventListener("input", () => {
   applyFullStoreFilters();
 });
+
+// Click handlers for search buttons
+document.getElementById("search-btn-stock")?.addEventListener("click", renderStockGrid);
+document.getElementById("search-btn-store")?.addEventListener("click", applyFullStoreFilters);
 
 // Category pills delegation
 document.getElementById("category-filters").addEventListener("click", (e) => {
