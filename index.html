@@ -76,12 +76,15 @@
     <div id="stock-screen" class="screen">
       <div id="stock-container">
         <div id="search-container">
-          <input
-            type="text"
-            id="search-input"
-            placeholder="Pesquisar produto..."
-          />
-          <button id="back-home">Voltar ao início</button>
+          <button id="back-home" class="btn-back">Voltar ao início</button>
+          <div class="search-wrapper">
+            <input
+              type="text"
+              id="search-input"
+              placeholder="Pesquisar produto..."
+            />
+            <button id="search-btn-stock" class="btn-search">🔍</button>
+          </div>
         </div>
         <div id="stock-category-filters" class="category-filters"></div>
         <div id="stock-grid"></div>
@@ -92,12 +95,15 @@
     <div id="full-store-screen" class="screen">
       <div id="full-store-container">
         <div id="full-store-search-container">
-          <input
-            type="text"
-            id="full-store-search"
-            placeholder="Pesquisar produto na loja..."
-          />
-          <button id="back-home-store">Voltar ao início</button>
+          <button id="back-home-store" class="btn-back">Voltar ao início</button>
+          <div class="search-wrapper">
+            <input
+              type="text"
+              id="full-store-search"
+              placeholder="Pesquisar produto na loja..."
+            />
+            <button id="search-btn-store" class="btn-search">🔍</button>
+          </div>
         </div>
         <div id="category-filters" class="category-filters"></div>
         <div id="full-store-info" class="full-store-info">
