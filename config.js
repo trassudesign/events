@@ -43,6 +43,47 @@ export async function supabaseFetch(endpoint, options = {}) {
 }
 
 /**
+ * Supabase Auth API helpers
+ */
+export async function supabaseSignIn(email, password) {
+  const url = `${SUPABASE_URL}/auth/v1/token?grant_type=password`;
+  const response = await fetch(url, {
+    method: "POST",
+    headers: {
+      apikey: SUPABASE_ANON_KEY,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, password }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json();
+    throw new Error(err.error_description || err.message || "Failed to sign in");
+  }
+
+  const data = await response.json();
+  // Save session info
+  localStorage.setItem("supabase.auth.token", JSON.stringify(data));
+  return data;
+}
+
+export function supabaseSignOut() {
+  localStorage.removeItem("supabase.auth.token");
+}
+
+export function getSupabaseSession() {
+  const session = localStorage.getItem("supabase.auth.token");
+  if (!session) return null;
+  try {
+    const parsed = JSON.parse(session);
+    // Basic check if token exists
+    return parsed.access_token ? parsed : null;
+  } catch (e) {
+    return null;
+  }
+}
+
+/**
  * Upload image to Supabase Storage
  */
 export async function uploadImage(file, bucket = "car-images") {
