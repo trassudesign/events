@@ -318,6 +318,8 @@ document.getElementById("category-filters").addEventListener("click", (e) => {
 });
 
 function renderFullStoreCategoryPills() {
+  const container = document.getElementById("category-filters");
+  if (!container) return;
   container.style.display = "flex";
   
   const texts = textContent[currentLanguage];
