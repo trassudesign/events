@@ -179,6 +179,8 @@ export async function getEventCars(eventId) {
  */
 export async function addCarToEvent(eventId, carData) {
   try {
+    const qtyToAdd = carData.quantity || 1;
+
     // 1. Check if an identical car variant already exists in this event
     // (Same name, color, and size)
     const existingCars = await supabaseFetch(
@@ -193,7 +195,7 @@ export async function addCarToEvent(eventId, carData) {
       const updated = await supabaseFetch(`/cars?id=eq.${existing.id}`, {
         method: "PATCH",
         body: JSON.stringify({
-          quantity: (existing.quantity || 1) + 1,
+          quantity: (existing.quantity || 1) + qtyToAdd,
           is_sold: false, // Ensure it's marked available if adding more
         }),
       });
@@ -212,7 +214,7 @@ export async function addCarToEvent(eventId, carData) {
         is_sold: false,
         color: carData.color || null,
         size: carData.size || null,
-        quantity: 1,
+        quantity: qtyToAdd,
         tags: carData.tags || null
       }),
     });

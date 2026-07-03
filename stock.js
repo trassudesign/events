@@ -9,6 +9,8 @@ import { textContent } from "./main.js";
 let stockCars = []; // Will be populated from active event
 let searchQuery = ""; // Track current search query
 let activeStockCategory = "all";
+let resetTimer = null;
+const RESET_TIMEOUT = 3 * 60 * 1000; // 3 minutes
 
 /* ========= DOM REFS ========= */
 const stockScreen = document.getElementById("stock-screen");
@@ -23,6 +25,7 @@ const modalCaption = document.getElementById("modal-caption");
 searchInput.addEventListener("input", (e) => {
   searchQuery = e.target.value.toLowerCase();
   renderFilteredStockGrid();
+  startResetTimer();
 });
 
 /* ========= LOAD EVENT CARS ========= */
@@ -161,8 +164,29 @@ if (stockCategoryFilters) {
     pills.forEach(p => p.classList.toggle("active", p.dataset.category === activeStockCategory));
     
     renderFilteredStockGrid();
+    startResetTimer();
   });
 }
+
+/* ========= AUTO-RESET TIMER ========= */
+function startResetTimer() {
+  clearTimeout(resetTimer);
+  resetTimer = setTimeout(() => {
+    console.log("Auto-resetting page due to inactivity");
+    if (location.hash === "#stock") {
+      renderStockGrid();
+    } else if (location.hash === "#/full-store") {
+      showFullStore();
+    }
+  }, RESET_TIMEOUT);
+}
+
+// Global activity listener
+window.addEventListener("click", () => {
+  if (location.hash === "#stock" || location.hash === "#/full-store") {
+    startResetTimer();
+  }
+});
 
 function renderStockGrid() {
   searchQuery = ""; // Reset search
@@ -217,16 +241,82 @@ function renderFilteredStockGrid() {
 }
 
 function openModal(car) {
-  modal.style.display = "block";
-  modalImg.src = car.img;
-    const outOfStockLabel = currentLanguage === "pt" ? "ESGOTADO" : "OUT OF STOCK";
-    const availableLabel = currentLanguage === "pt" ? "unidades disponíveis" : "Units Available";
+  const texts = textContent[currentLanguage];
+  const outOfStockLabel = currentLanguage === "pt" ? "ESGOTADO" : "OUT OF STOCK";
+  const availableLabel = currentLanguage === "pt" ? "unidades disponíveis" : "Units Available";
 
-    modalCaption.innerHTML = `
-    <strong>${car.name}</strong><br>
-    ${car.color || car.size ? `<span>${car.color || ""} ${car.size ? `/ ${car.size}` : ""}</span>` : ""}
-    <p class="qty-label">${car.is_sold ? outOfStockLabel : `${car.quantity} ${availableLabel}`}</p>
+  // Try to find a Shopify URL for this car to show a QR code
+  let productUrl = "";
+  if (shopifyProducts.length > 0) {
+    const found = shopifyProducts.find(p => p.title.toLowerCase() === car.name.toLowerCase());
+    if (found) {
+      productUrl = `https://d687ec-85.myshopify.com/products/${found.handle}`;
+    }
+  }
+
+  // Use a common side-by-side modal structure
+  showEnhancedModal({
+    name: car.name,
+    img: car.img,
+    variantInfo: car.color || car.size ? `${car.color || ""} ${car.size ? `/ ${car.size}` : ""}` : "",
+    priceLabel: `€${car.price}`,
+    statusLabel: car.is_sold ? outOfStockLabel : `${car.quantity} ${availableLabel}`,
+    url: productUrl
+  });
+}
+
+/**
+ * Common Enhanced Modal for both views
+ */
+function showEnhancedModal(data) {
+  const texts = textContent[currentLanguage];
+  
+  // Update Modal HTML structure for side-by-side
+  modal.innerHTML = `
+    <div class="modal-enhanced-content">
+      <span class="close" id="close-modal-enhanced">&times;</span>
+      
+      <div class="modal-body-split">
+        <div class="modal-image-side">
+          <img src="${data.img}" alt="${data.name}" id="modal-img-large">
+        </div>
+        
+        <div class="modal-info-side">
+          <h2 id="modal-title-large">${data.name}</h2>
+          <p class="modal-variant-info">${data.variantInfo}</p>
+          <p class="modal-status-label">${data.statusLabel}</p>
+          
+          <div class="modal-qr-section">
+            <div id="modal-qr-code"></div>
+            <p class="modal-qr-instruction">${texts.qrInstruction || "Scan to view online"}</p>
+          </div>
+        </div>
+      </div>
+    </div>
   `;
+
+  modal.style.display = "block";
+
+  // Generate QR if URL exists
+  const qrContainer = document.getElementById("modal-qr-code");
+  if (data.url) {
+    new QRCode(qrContainer, {
+      text: data.url,
+      width: 180,
+      height: 180,
+      colorDark: "#000000",
+      colorLight: "#ffffff",
+      correctLevel: QRCode.CorrectLevel.M
+    });
+  } else {
+    qrContainer.innerHTML = '<div class="no-qr"></div>';
+    qrContainer.closest(".modal-qr-section").style.display = "none";
+  }
+
+  // Setup close handler
+  document.getElementById("close-modal-enhanced").onclick = () => {
+    modal.style.display = "none";
+  };
 }
 
 /* ========= MODAL HANDLERS ========= */
@@ -249,11 +339,6 @@ if (backHome) {
 const fullStoreScreen = document.getElementById("full-store-screen");
 const fullStoreGrid = document.getElementById("full-store-grid");
 const backHomeStore = document.getElementById("back-home-store");
-const qrModal = document.getElementById("qr-modal");
-const qrcodeContainer = document.getElementById("qrcode");
-const qrProductName = document.getElementById("qr-product-name");
-const closeQr = document.getElementById("close-qr");
-const qrInstruction = document.getElementById("qr-instruction");
 
 const fullStoreSearchInput = document.getElementById("full-store-search");
 
@@ -314,6 +399,7 @@ export async function showFullStore() {
 
 fullStoreSearchInput.addEventListener("input", () => {
   applyFullStoreFilters();
+  startResetTimer();
 });
 
 // Click handlers for search buttons
@@ -332,6 +418,7 @@ document.getElementById("category-filters").addEventListener("click", (e) => {
   pills.forEach(p => p.classList.toggle("active", p.dataset.category === activeCategory));
   
   applyFullStoreFilters();
+  startResetTimer();
 });
 
 function renderFullStoreCategoryPills() {
@@ -404,7 +491,7 @@ function renderFullStoreGrid(products) {
     card.className = "stock-card";
 
     // Use product featured image or first image
-    const img = product.images[0]?.src || "";
+    const img = product.image?.src || product.images[0]?.src || "";
 
     // Check if this exists in the active event stock
     const inEventStock = stockCars.some(c => 
@@ -435,26 +522,21 @@ function renderFullStoreGrid(products) {
 }
 
 function openQrModal(name, url) {
+  // Find product to get its image
+  const product = shopifyProducts.find(p => p.title === name);
+  const img = product?.image?.src || product?.images[0]?.src || "";
   const texts = textContent[currentLanguage];
-  qrProductName.textContent = name;
-  if (qrInstruction) qrInstruction.textContent = texts.qrInstruction;
-  qrcodeContainer.innerHTML = "";
-  qrModal.style.display = "block";
 
-  qrcode = new QRCode(qrcodeContainer, {
-    text: url,
-    width: 256,
-    height: 256,
-    colorDark: "#000000",
-    colorLight: "#ffffff",
-    correctLevel: QRCode.CorrectLevel.H
+  showEnhancedModal({
+    name: name,
+    img: img,
+    variantInfo: product?.product_type || "Model",
+    priceLabel: product?.variants[0] ? `€${product.variants[0].price}` : "",
+    statusLabel: "", // Online store products are assumed available
+    url: url
   });
 }
 
-closeQr.addEventListener("click", () => (qrModal.style.display = "none"));
-qrModal.addEventListener("click", (e) => {
-  if (e.target === qrModal) qrModal.style.display = "none";
-});
 // Full store back button setup
 const bhs = document.getElementById("back-home-store");
 if (bhs) {

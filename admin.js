@@ -153,11 +153,12 @@ export function setupAdminDelegation() {
       case "toggle-variant":
         btn.classList.toggle("selected");
         // If variant has a specific image, update the card image locally
-        const cardImg = btn.closest(".shopify-item").querySelector(".shopify-item-main img");
+        const productCard = btn.closest(".shopify-item");
+        const cardImg = productCard ? productCard.querySelector(".shopify-item-main img") : null;
         if (cardImg && btn.dataset.variantImage && btn.classList.contains("selected")) {
           cardImg.src = btn.dataset.variantImage;
           cardImg._originalSrc = cardImg._originalSrc || cardImg.src;
-        } else if (cardImg && cardImg._originalSrc && !btn.closest(".shopify-variants").querySelector(".selected")) {
+        } else if (cardImg && cardImg._originalSrc && !productCard.querySelector(".selected")) {
           // Revert to original if no variants selected in this card
           cardImg.src = cardImg._originalSrc;
         }
@@ -172,7 +173,8 @@ export function setupAdminDelegation() {
         await removeCarUI(id);
         break;
       case "add-selected-shopify":
-        await handleShopifySelection(id);
+        const targetEventId = id || currentEditEventId;
+        await handleShopifySelection(targetEventId);
         break;
     }
   });
@@ -737,54 +739,20 @@ async function showShopifyPicker(eventId) {
       return;
     }
 
-    let html = `
-      <h2>Select Cars from Shopify</h2>
-      <p>Click on products to select them, then click "Add Selected"</p>
-      <div class="admin-notification"></div>
-      <div class="shopify-grid">
-    `;
+    // Store products data
+    editContent._shopifyProducts = products;
 
-    products.forEach((p, i) => {
-      const defaultImg = p.images[0]?.src || "";
-      
-      html += `
-        <div class="shopify-item" data-product-index="${i}">
-          <div class="shopify-item-main">
-            <img src="${defaultImg}" alt="${p.title}" />
-            <div class="shopify-item-info">
-              <p class="shopify-item-name">${p.title}</p>
-              <p class="shopify-item-count">${p.variants.length} variant(s)</p>
-            </div>
-          </div>
-          <div class="shopify-variants">
-            ${p.variants.map((v, vi) => {
-              const variantName = v.title === "Default Title" ? "" : v.title;
-              
-              // Find image for this variant using featured_image.id
-              let variantImg = defaultImg;
-              if (v.featured_image && v.featured_image.id) {
-                const imgObj = p.images.find(img => img.id === v.featured_image.id);
-                if (imgObj) variantImg = imgObj.src;
-              }
-
-              return `
-                <div class="shopify-variant" 
-                     data-action="toggle-variant" 
-                     data-product-idx="${i}" 
-                     data-variant-idx="${vi}"
-                     data-variant-image="${variantImg}">
-                  <span class="variant-select-dot"></span>
-                  <span class="variant-title">${variantName || 'Standard'}</span>
-                  <span class="variant-price">€${v.price}</span>
-                </div>
-              `;
-            }).join('')}
-          </div>
+    editContent.innerHTML = `
+      <div class="shopify-picker-header">
+        <h2>Select Cars from Shopify</h2>
+        <div class="shopify-search-wrapper">
+          <input type="text" id="shopify-search" placeholder="Search products..." class="admin-search-input">
         </div>
-      `;
-    });
-
-    html += `
+        <p>Select variants and set quantity, then click "Add Selected"</p>
+        <div class="admin-notification"></div>
+      </div>
+      <div class="shopify-grid" id="shopify-grid">
+        <!-- Products will be rendered here -->
       </div>
       <div class="shopify-actions">
         <button class="btn-small" data-action="add-selected-shopify" data-id="${eventId}">Add Selected</button>
@@ -792,10 +760,24 @@ async function showShopifyPicker(eventId) {
       </div>
     `;
 
-    editContent.innerHTML = html;
+    const grid = document.getElementById("shopify-grid");
+    const searchInput = document.getElementById("shopify-search");
 
-    // Store products data for later use
-    editContent._shopifyProducts = products;
+    // Initial render
+    const productsWithOriginalIndex = products.map((p, idx) => ({ ...p, _originalIdx: idx }));
+    renderShopifyGrid(productsWithOriginalIndex, grid);
+
+    // Filter logic
+    searchInput.addEventListener("input", (e) => {
+      const query = e.target.value.toLowerCase();
+      const filtered = productsWithOriginalIndex.filter(p => 
+        p.title.toLowerCase().includes(query) || 
+        (p.tags && p.tags.toLowerCase().includes(query)) ||
+        (p.product_type && p.product_type.toLowerCase().includes(query))
+      );
+      renderShopifyGrid(filtered, grid);
+    });
+
   } catch (err) {
     editContent.innerHTML = `
       <h2>Error</h2>
@@ -806,9 +788,66 @@ async function showShopifyPicker(eventId) {
 }
 
 /**
+ * Render Shopify items into the grid
+ */
+function renderShopifyGrid(products, container) {
+  container.innerHTML = products.map((p) => {
+    const defaultImg = p.image?.src || p.images[0]?.src || "";
+    const originalIdx = p._originalIdx !== undefined ? p._originalIdx : products.indexOf(p);
+    
+    return `
+      <div class="shopify-item" data-product-index="${originalIdx}">
+        <div class="shopify-item-main">
+          <img src="${defaultImg}" alt="${p.title}" />
+          <div class="shopify-item-info">
+            <p class="shopify-item-name">${p.title}</p>
+            <p class="shopify-item-count">${p.variants.length} variant(s)</p>
+          </div>
+        </div>
+        <div class="shopify-variants">
+          ${p.variants.map((v, vi) => {
+            const variantName = v.title === "Default Title" ? "" : v.title;
+            
+            // Find image for this variant
+            let variantImg = defaultImg;
+            if (v.featured_image && v.featured_image.id) {
+              const imgObj = p.images.find(img => img.id === v.featured_image.id);
+              if (imgObj) variantImg = imgObj.src;
+            }
+
+            return `
+              <div class="shopify-variant" 
+                   data-action="toggle-variant" 
+                   data-product-idx="${originalIdx}" 
+                   data-variant-idx="${vi}"
+                   data-variant-image="${variantImg}">
+                <span class="variant-select-dot"></span>
+                <span class="variant-title">${variantName || 'Standard'}</span>
+                <span class="variant-price">€${v.price}</span>
+                <div class="variant-qty-wrapper">
+                  <label>Qty:</label>
+                  <input type="number" class="variant-qty-input" value="1" min="1" onclick="event.stopPropagation()" />
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/**
  * Handle adding selected Shopify products
  */
 async function handleShopifySelection(eventId) {
+  // Ensure eventId is present
+  const targetId = eventId || currentEditEventId;
+  if (!targetId) {
+    notifyAdmin("Error: Missing event ID");
+    return;
+  }
+
   const editContent = document.getElementById("admin-edit-content");
   const products = editContent._shopifyProducts;
   if (!products) return;
@@ -822,9 +861,11 @@ async function handleShopifySelection(eventId) {
 
   // Show loading
   const addBtn = editContent.querySelector('[data-action="add-selected-shopify"]');
-  const originalText = addBtn.textContent;
-  addBtn.textContent = "Adding...";
-  addBtn.disabled = true;
+  const originalText = addBtn ? addBtn.textContent : "Add Selected";
+  if (addBtn) {
+    addBtn.textContent = "Adding...";
+    addBtn.disabled = true;
+  }
 
   let addedCount = 0;
   for (const item of selectedVariants) {
@@ -837,7 +878,7 @@ async function handleShopifySelection(eventId) {
     if (!product || !variant) continue;
 
     // Use variant-specific image if available
-    const img = item.dataset.variantImage || product.images[0]?.src || "";
+    const img = item.dataset.variantImage || product.image?.src || product.images[0]?.src || "";
     const tags = product.tags || "";
     
     // Attempt to parse color/size from variant title or options
@@ -850,6 +891,8 @@ async function handleShopifySelection(eventId) {
     // For now, let's just use what Shopify gives us.
     
     try {
+      const qty = parseInt(item.querySelector('.variant-qty-input')?.value) || 1;
+
       await addCarToEvent(eventId, {
         name: product.title,
         image_url: img,
@@ -857,7 +900,8 @@ async function handleShopifySelection(eventId) {
         price: parseFloat(variant.price),
         color: color === "Default Title" ? null : color,
         size: size || null,
-        tags: tags
+        tags: tags,
+        quantity: qty
       });
       addedCount++;
     } catch (err) {
