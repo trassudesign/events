@@ -530,7 +530,7 @@ function openQrModal(name, url) {
   showEnhancedModal({
     name: name,
     img: img,
-    variantInfo: product?.product_type || "Model",
+    variantInfo: product?.product_type,
     priceLabel: product?.variants[0] ? `€${product.variants[0].price}` : "",
     statusLabel: "", // Online store products are assumed available
     url: url
