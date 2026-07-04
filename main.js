@@ -118,12 +118,26 @@ function updateHomeBranding() {
   const mainLogo = document.getElementById("main-event-logo");
   const stockLogo = document.getElementById("stock-event-logo");
   const homeScreen = document.getElementById("home-screen");
+  const activeLogo = activeEvent && activeEvent.logo_url ? activeEvent.logo_url : null;
 
-  const defaultLogo = "images/acf-logo.png";
-  const activeLogo = activeEvent && activeEvent.logo_url ? activeEvent.logo_url : defaultLogo;
-
-  if (mainLogo) mainLogo.src = activeLogo;
-  if (stockLogo) stockLogo.src = activeLogo;
+  if (mainLogo) {
+    if (activeLogo) {
+      mainLogo.src = activeLogo;
+      mainLogo.hidden = false;
+    } else {
+      mainLogo.removeAttribute("src");
+      mainLogo.hidden = true;
+    }
+  }
+  if (stockLogo) {
+    if (activeLogo) {
+      stockLogo.src = activeLogo;
+      stockLogo.hidden = false;
+    } else {
+      stockLogo.removeAttribute("src");
+      stockLogo.hidden = true;
+    }
+  }
 
   // Toggle Quiz Visibility
   if (activeEvent && activeEvent.show_quiz === false) {
