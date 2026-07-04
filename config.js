@@ -58,7 +58,9 @@ export async function supabaseSignIn(email, password) {
 
   if (!response.ok) {
     const err = await response.json();
-    throw new Error(err.error_description || err.message || "Failed to sign in");
+    throw new Error(
+      err.error_description || err.message || "Failed to sign in",
+    );
   }
 
   const data = await response.json();

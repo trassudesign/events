@@ -150,6 +150,12 @@ export function setupAdminDelegation() {
       case "toggle-sold":
         await toggleSoldStatus(id, sold === "true");
         break;
+      case "decrease-variant-qty":
+        updateVariantQty(btn, -1);
+        break;
+      case "increase-variant-qty":
+        updateVariantQty(btn, 1);
+        break;
       case "toggle-variant":
         btn.classList.toggle("selected");
         // If variant has a specific image, update the card image locally
@@ -765,17 +771,28 @@ async function showShopifyPicker(eventId) {
 
     // Initial render
     const productsWithOriginalIndex = products.map((p, idx) => ({ ...p, _originalIdx: idx }));
+    const filterProducts = (query) => {
+      const normalizedQuery = query.trim().toLowerCase();
+      if (!normalizedQuery) return productsWithOriginalIndex;
+
+      return productsWithOriginalIndex.filter((p) => {
+        const searchableText = [
+          p.title,
+          p.handle,
+          p.product_type,
+          p.tags,
+          ...(p.variants || []).map((variant) => [variant.title, variant.option1, variant.option2, variant.option3].filter(Boolean).join(" "))
+        ].filter(Boolean).join(" ").toLowerCase();
+
+        return searchableText.includes(normalizedQuery);
+      });
+    };
+
     renderShopifyGrid(productsWithOriginalIndex, grid);
 
     // Filter logic
     searchInput.addEventListener("input", (e) => {
-      const query = e.target.value.toLowerCase();
-      const filtered = productsWithOriginalIndex.filter(p => 
-        p.title.toLowerCase().includes(query) || 
-        (p.tags && p.tags.toLowerCase().includes(query)) ||
-        (p.product_type && p.product_type.toLowerCase().includes(query))
-      );
-      renderShopifyGrid(filtered, grid);
+      renderShopifyGrid(filterProducts(e.target.value), grid);
     });
 
   } catch (err) {
@@ -790,6 +807,16 @@ async function showShopifyPicker(eventId) {
 /**
  * Render Shopify items into the grid
  */
+function updateVariantQty(button, delta) {
+  const controls = button.closest(".variant-qty-wrapper");
+  const input = controls?.querySelector(".variant-qty-input");
+  if (!input) return;
+
+  const currentValue = parseInt(input.value, 10);
+  const nextValue = Math.max(1, Number.isNaN(currentValue) ? 1 : currentValue + delta);
+  input.value = nextValue;
+}
+
 function renderShopifyGrid(products, container) {
   container.innerHTML = products.map((p) => {
     const defaultImg = p.image?.src || p.images[0]?.src || "";
@@ -825,8 +852,9 @@ function renderShopifyGrid(products, container) {
                 <span class="variant-title">${variantName || 'Standard'}</span>
                 <span class="variant-price">€${v.price}</span>
                 <div class="variant-qty-wrapper">
-                  <label>Qty:</label>
-                  <input type="number" class="variant-qty-input" value="1" min="1" onclick="event.stopPropagation()" />
+                  <button type="button" class="variant-qty-btn" data-action="decrease-variant-qty" data-product-idx="${originalIdx}" data-variant-idx="${vi}" aria-label="Decrease quantity">−</button>
+                  <input type="number" class="variant-qty-input" value="1" min="1" inputmode="numeric" onclick="event.stopPropagation()" />
+                  <button type="button" class="variant-qty-btn" data-action="increase-variant-qty" data-product-idx="${originalIdx}" data-variant-idx="${vi}" aria-label="Increase quantity">+</button>
                 </div>
               </div>
             `;
